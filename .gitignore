@@ -1,0 +1,37 @@
+# Dependencias
+node_modules/
+
+# Backups y compresión
+_7z/
+_borrar/
+
+# Datos de runtime (se generan automáticamente)
+public/json/
+notifications.json
+
+# Sesiones y preferencias de usuario
+sessions/
+user_prefs/
+
+# Cookies / archivos temporales
+session.cookie
+*.cookie
+
+# Cache de thumbnails de Windows
+Thumbs.db
+**/Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Desktop.ini
+
+# Configuraciones locales (no subir credenciales al repo)
+instalacion.json

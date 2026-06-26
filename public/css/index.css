@@ -1,0 +1,552 @@
+.bi-arrow-bar-left, .bi-arrow-bar-right {
+    cursor: pointer;
+}
+
+.bi-arrow-bar-left:hover, .bi-arrow-bar-right:hover {
+    text-shadow: 1px 1px 3px rgba(16, 16, 16, .6);
+}
+
+div.grf {
+    border: 1px #888 solid;
+    height: 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 9px;
+    color: #fff;
+    border-radius: 4px;
+}
+
+#log {
+    line-height: 1.2rem;
+    white-space: pre-line;
+    font-size: 11px !important;
+    max-height: 75vh;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #fcfcfc;
+}
+
+.flipa {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.flipa:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+header.shrink {
+    padding: 0.5rem 0;
+}
+
+header.shrink .display-5 {
+    font-size: 2rem;
+}
+
+header.shrink .lead {
+    display: none !important;
+}
+
+.bloque {
+    display: none;
+}
+
+.draggable {
+    cursor: move;
+}
+
+.draggable.dragging {
+    opacity: 0.5;
+    background-color: #f8f9fa;
+    border: 2px dashed #0d6efd;
+}
+
+.svg-icon {
+    display: inline-block;
+    height: 1em;
+    width: auto;
+    vertical-align: -0.125em;
+    margin-right: 0.125rem;
+}
+
+/* Estilos para MingoTouchs Drag & Drop */
+.mingo-item {
+    transition: transform 0.2s, background-color 0.2s;
+    border-left: 4px solid transparent;
+}
+
+.mingo-item:hover {
+    background-color: #f1f3f5;
+    border-left-color: #0d6efd;
+}
+
+.mingo-item.dragging {
+    opacity: 0.4;
+    background-color: #e9ecef;
+    transform: scale(0.98);
+    border: 2px dashed #0d6efd;
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: #eee;
+  background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+  border-radius: 5px;
+  background-size: 200% 100%;
+  animation: 1.5s shine linear infinite;
+}
+
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 3px;
+  background: #eee;
+  background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+  background-size: 200% 100%;
+  animation: 1.5s shine linear infinite;
+}
+
+.tarifa-table, .tarifa {
+    font-size: 11pt;
+}
+
+.device-label {
+    font-size: 14pt;
+}
+
+.device-value {
+    font-size: 11pt;
+}
+
+@keyframes shine {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+/* Simulador Fluidity */
+.preview-grid-item, .bulb-icon, .plug-led, .preview-footer-btn {
+    transition: all 0.1s ease-in-out;
+}
+
+.preview-grid-item:active, .preview-grid-item.active-press,
+.bulb-icon:active, .bulb-icon.active-press,
+.plug-led:active, .plug-led.active-press {
+    transform: scale(0.96);
+    filter: brightness(0.95);
+}
+
+.bulb-icon, .plug-led {
+    transition: background-color 0.1s ease;
+}
+
+/* Restart Modal Styles */
+.restart-pulse {
+    animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(0.9); opacity: 0.7; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+#restart-progress-container {
+    height: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#restart-progress-bar {
+    height: 100%;
+    background-color: #0d6efd;
+    width: 0%;
+    transition: width 0.5s linear;
+}
+
+/* Nuevas clases semanticas para reemplazar estilos inline */
+.block-panel {
+    background-color: rgba(248, 249, 250, 0.98);
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+}
+
+.block-header {
+    background-color: #6c757d;
+    color: #fff;
+    border-radius: 0.375rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    font-size: 1.5rem;
+}
+
+.chart-wrapper {
+    height: 640px;
+}
+
+.weather-chart-wrapper {
+    height: 360px;
+}
+
+.spacer-10 {
+    height: 10px;
+}
+
+.footer-legal {
+    font-size: 10px;
+    text-align: center;
+}
+
+.footer-legal a {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.log-viewer {
+    white-space: pre-line;
+    font-size: 11px;
+    max-height: 75vh;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #fcfcfc;
+}
+
+.weather-widget {
+    line-height: 1.1;
+}
+
+.tuya-raw-info {
+    max-height: 500px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+}
+
+.mingo-list {
+    max-height: 400px;
+}
+
+.mingo-dropzone {
+    min-height: 300px;
+}
+
+.mingo-preview-modal {
+    background: #2c3e50;
+    border-radius: 15px;
+}
+
+.esp32-frame {
+    border-radius: 10px;
+    border: 4px solid #555;
+}
+
+.mingo-screen-container {
+    width: 320px;
+    height: 240px;
+    overflow: hidden;
+    position: relative;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: all 0.3s ease;
+}
+
+.restart-icon {
+    font-size: 4rem;
+    display: inline-block;
+}
+
+.bgimage {
+    display: none;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    right: 0;
+    object-fit: cover;
+}
+
+/* Estilos del simulador MingoTouch */
+.preview-separator {
+    height: 3px;
+    margin-top: 5px;
+}
+
+.preview-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 40px;
+    border-top-width: 1px;
+    border-top-style: solid;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    font-size: 10px;
+    opacity: 0.95;
+    z-index: 10;
+}
+
+.preview-arrow-left,
+.preview-arrow-right {
+    width: 20px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.preview-arrow-left {
+    width: 0;
+    height: 0;
+    border-top: 15px solid transparent;
+    border-bottom: 15px solid transparent;
+    border-right: 20px solid;
+}
+
+.preview-arrow-right {
+    width: 0;
+    height: 0;
+    border-top: 15px solid transparent;
+    border-bottom: 15px solid transparent;
+    border-left: 20px solid;
+}
+
+.preview-mode-btn {
+    width: 36px;
+    height: 22px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 9px;
+    cursor: pointer;
+}
+
+.preview-grid {
+    max-height: 140px;
+    overflow: hidden;
+}
+
+.preview-grid-item {
+    background: #000;
+    border: 1px solid;
+    border-radius: 4px;
+    height: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1px;
+    cursor: pointer;
+}
+
+.preview-led {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-bottom: 2px;
+    border: 1px solid #444;
+}
+
+.preview-grid-label {
+    font-size: 7px;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 100%;
+    line-height: 1;
+}
+
+.preview-offline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #f80000;
+}
+
+.preview-offline i {
+    font-size: 30px;
+    margin-bottom: 5px;
+}
+
+.preview-offline div {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.preview-bulb-wrapper,
+.preview-plug-wrapper {
+    cursor: pointer;
+}
+
+.preview-bulb {
+    position: relative;
+    width: 60px;
+    height: 70px;
+    margin: 0 auto;
+}
+
+.preview-bulb-base {
+    width: 18px;
+    height: 12px;
+    margin: -4px auto 0;
+}
+
+.preview-plug {
+    position: relative;
+    width: 60px;
+    height: 50px;
+    margin: 0 auto;
+    border-radius: 8px;
+}
+
+.preview-plug-pin-left,
+.preview-plug-pin-right {
+    position: absolute;
+    top: -10px;
+    width: 8px;
+    height: 12px;
+}
+
+.preview-plug-pin-left { left: 15px; }
+.preview-plug-pin-right { right: 15px; }
+
+.preview-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: -5px;
+}
+
+.preview-row {
+    display: flex;
+    justify-content: space-between;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    padding: 2px;
+}
+
+.preview-label {
+    font-size: 12px;
+}
+
+.preview-value {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.preview-temp,
+.preview-hum {
+    font-size: 18px;
+}
+
+.preview-weather {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: monospace;
+    margin-top: -5px;
+}
+
+.preview-energy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    height: 100%;
+    padding-top: 5px;
+}
+
+.preview-energy-bar {
+    position: relative;
+    width: 85%;
+    height: 35px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.preview-energy-fill {
+    height: 100%;
+    border-radius: 6px;
+}
+
+.preview-energy-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.preview-power {
+    font-size: 36px;
+    font-weight: bold;
+    text-shadow: 0 0 5px;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.preview-price {
+    font-size: 14px;
+}
+
+.tuya-icon {
+    height: 48px;
+    width: 48px;
+    vertical-align: middle;
+}
+
+.tuya-cloud-icon {
+    height: 32px;
+    width: 32px;
+}
+
+.cloud-info,
+.cloud-info-table,
+.cloud-device-body {
+    font-size: 0.85rem;
+}
+
+.config-table {
+    font-size: 0.9rem;
+}
+
+.config-key {
+    width: 40%;
+}
+
+.assigned-label {
+    width: 35%;
+    color: #666;
+}
+
+.weather-icon {
+    width: 45px;
+    height: 45px;
+    margin-top: -5px;
+    margin-bottom: -5px;
+}
+
+.weather-location {
+    max-width: 150px;
+}
+
+.small-id {
+    font-size: 0.75rem;
+}
