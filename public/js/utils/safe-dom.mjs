@@ -21,10 +21,11 @@ function isHtml(x) {
 }
 
 export function raw(str) {
+    const s = (str == null) ? '' : String(str);
     return {
         __html: true,
-        toString: () => str,
-        valueOf: () => str
+        toString: () => s,
+        valueOf: () => s
     };
 }
 

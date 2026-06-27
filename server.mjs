@@ -169,6 +169,16 @@ async function startServer() {
         app.use('/chart.js', express.static(path.join(__dirname, 'node_modules/chart.js/dist/')));
         app.use('/moment', express.static(path.join(__dirname, 'node_modules/moment/min/')));
 
+        // Public version endpoint (no auth needed)
+        app.get('/version', (_req, res) => {
+            try {
+                const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+                res.json({ version: pkg.version || '' });
+            } catch {
+                res.json({ version: '' });
+            }
+        });
+
         // Session middleware (persistent store on disk to survive restarts)
         const sessionSecret = (instalacion && instalacion.SERVER && instalacion.SERVER.SessionSecret) || process.env.SESSION_SECRET || 'cambiar-esta-clave';
         const FileStore = sessionFileStore(session);

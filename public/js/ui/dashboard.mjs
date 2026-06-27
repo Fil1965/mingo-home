@@ -6,6 +6,7 @@ import { formatDate, isoDate } from '../utils/helpers.mjs';
 
 export function initDashboard() {
     loadInstallationTitle();
+    loadVersion();
     setupDateArrows();
     refreshDate();
 
@@ -37,6 +38,17 @@ async function loadInstallationTitle() {
         if (err.status === 401) {
             window.location.href = '/login';
         }
+    }
+}
+
+async function loadVersion() {
+    try {
+        const res = await getJson('/version');
+        if (res.version) {
+            setText($('#Version'), 'v' + res.version);
+        }
+    } catch {
+        // Silencioso: la version es decorativa
     }
 }
 

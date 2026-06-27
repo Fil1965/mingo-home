@@ -1,7 +1,7 @@
 import { getJson, post, postJson } from '../utils/api.mjs';
 import { appState } from '../utils/state.mjs';
 import { on, emit } from '../utils/events.mjs';
-import { html, setHtml, setText, escapeHtml } from '../utils/safe-dom.mjs';
+import { html, raw, setHtml, setText, escapeHtml } from '../utils/safe-dom.mjs';
 import { TUYA_CATEGORIES } from '../utils/helpers.mjs';
 
 const order = ['GENERAL', 'SERVER', 'USUARIOS', 'TUYA'];
@@ -162,7 +162,7 @@ function renderSection(section, values, states, _imagesUrl) {
         <div class="col">
             <div class="card h-100 shadow-sm">
                 <div class="card-header bg-secondary text-white py-1 d-flex align-items-center">
-                    ${headerHtml}${infoBtn}
+                    ${raw(headerHtml)}${infoBtn}
                 </div>
                 <div class="card-body p-2">
     `;
