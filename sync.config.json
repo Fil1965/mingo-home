@@ -1,0 +1,31 @@
+{
+  "destination": "N:\\home\\philippe\\node.js\\tuya.1.1.0",
+  "excludes": [
+    "node_modules",
+    "public/json",
+    "test",
+    "_borrar",
+    ".github",
+    ".idea",
+    ".vscode",
+    ".git",
+    ".gitignore",
+    "logs",
+    "sessions",
+    "user_prefs",
+    "instalacion.json",
+    "notifications.json",
+    "Thumbs.db",
+    "*.log",
+    "npm-debug.log*",
+    "*.cookie",
+    "session.cookie",
+    "sync.config.json",
+    "scripts/sync.mjs",
+    "eslint.config.mjs"
+  ],
+  "preserveInDestination": [
+    "instalacion.json",
+    "notifications.json"
+  ]
+}
