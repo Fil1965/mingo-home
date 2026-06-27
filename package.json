@@ -27,7 +27,8 @@
   "scripts": {
     "test": "node test/test_horas.mjs",
     "start": "node server.mjs",
-    "lint": "eslint public/js/**/*.mjs"
+    "lint": "eslint public/js/**/*.mjs",
+    "sync": "node scripts/sync.mjs"
   },
   "author": "Philippe Mingo",
   "license": "UNLICENSED",
