@@ -14,7 +14,7 @@ async function refreshHistory() {
     }
 
     try {
-        const json = await getJson('/log/yesterday');
+        const json = await getJson('/log/24h');
         if (!Array.isArray(json) || json.length === 0) {
             setHtml($('#log'), html`<div class="text-muted">No hay entradas de log disponibles.</div>`);
         } else {

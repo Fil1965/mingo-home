@@ -733,12 +733,23 @@ async function startServer() {
 
         app.get('/log/:lin', requireAuth, async (req, res) => {
             try {
-                const isYesterday = req.params.lin.toString().toLowerCase() === 'yesterday';
+                const param = req.params.lin.toString().toLowerCase();
+                const isYesterday = param === 'yesterday';
+                const is24h = param === '24h';
                 const data = await fsp.readFile(logger.logFile || path.join(__dirname, 'logs', 'server.log'), 'utf8').catch(() => '');
                 const lines = data.split('\n').filter(line => line.trim() !== '');
 
                 let result;
-                if (isYesterday) {
+                if (is24h) {
+                    // Ultimas 24 horas desde ahora, lo mas nuevo primero
+                    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+                    const filtered = lines.filter(line => {
+                        const tsMatch = line.match(/"time":(\d+)/);
+                        if (!tsMatch) return false;
+                        return Number(tsMatch[1]) >= cutoff;
+                    });
+                    result = filtered.reverse();
+                } else if (isYesterday) {
                     const yesterday = new Date();
                     yesterday.setDate(yesterday.getDate() - 1);
                     const yyyymmdd = yesterday.toISOString().slice(0, 10);
