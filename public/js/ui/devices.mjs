@@ -1,4 +1,4 @@
-import { getJson, post } from '../utils/api.mjs';
+import { getJson } from '../utils/api.mjs';
 import { appState } from '../utils/state.mjs';
 import { on, emit } from '../utils/events.mjs';
 import { html, setHtml } from '../utils/safe-dom.mjs';
@@ -66,7 +66,7 @@ function setupDeviceClick() {
             setVisualState(h3, !wasOn);
 
             try {
-                await post('/alternar/' + row.attr('dev') + '/' + row.attr('dsp'), { dsp: row.attr('dsp') });
+                await getJson('/alternar/' + row.attr('dev') + '/' + row.attr('dsp'));
                 row.attr('dsp', row.attr('dsp') === '1' ? '0' : '1');
                 emit('history:refresh');
             } catch (err) {
