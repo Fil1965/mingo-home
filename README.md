@@ -18,7 +18,7 @@ El servidor escucha por defecto en `http://0.0.0.0:3000`.
 
 ### Configuración
 
-La configuración se almacena en `instalacion.json` (generado a partir del antiguo `instalacion.ini`). Antes de arrancar por primera vez, copia la plantilla y edita los valores:
+La configuración se almacena en `instalacion.json`. Antes de arrancar por primera vez, copia la plantilla y edita los valores:
 
 ```bash
 cp instalacion.example.json instalacion.json
@@ -34,6 +34,7 @@ cp instalacion.example.json instalacion.json
 | `npm start` | Arranca el servidor (`node server.mjs`) |
 | `npm test` | Ejecuta la suite de tests (`test/test_horas.mjs`) |
 | `npm run lint` | Linting de archivos `.mjs` del frontend con ESLint |
+| `npm run sync` | Copia los archivos necesarios al destino configurado en `sync.config.json` |
 
 ## 🏗️ Arquitectura
 
@@ -48,7 +49,7 @@ alertManager.mjs        → Alertas de la interfaz
 retentionManager.mjs    → Limpieza de datos históricos
 logger.mjs              → Logging estructurado (pino)
 public/                 → Frontend estático (HTML/JS, jQuery, Bootstrap, Chart.js)
-scripts/                → Scripts de utilidad (backup, iconos)
+scripts/                → Scripts de utilidad (sync, backup, iconos)
 test/                   → Tests
 ```
 

@@ -4,7 +4,7 @@ Short, actionable guidance for an AI coding agent to be productive in this codeb
 
 ## TL;DR
 - **Run**: `node server.mjs` (avoid `server.js` if present).
-- **Config**: `instalacion.ini` is the single source of truth.
+- **Config**: `instalacion.json` is the single source of truth.
 - **Architecture**: Node.js + Express (Server) + jQuery/Bootstrap (Client).
 - **Core Principle**: **BATCH REQUESTS**. Do not make individual API calls to Tuya if you can avoid it. Use `getTodosDispositivos`.
 
@@ -24,11 +24,11 @@ Short, actionable guidance for an AI coding agent to be productive in this codeb
   - **Weather Failure**: If AEMET fails, it retries for 5 minutes. If it still fails, it checks for `OpenWeatherApiKey` as a fallback.
   - **Weather Priority**: Configurable via `PrioridadTiempo` (e.g., `OpenWeather, AEMET`). Default is `AEMET, OpenWeather`.
   - `consumptionManager.checkConsumption`: Runs every minute. **MUST USE BATCH FETCHING**.
-- **Authentication**: Custom session-based auth (`express-session` + `session-file-store`). **Not** Basic Auth (though a middleware exists, it's unused). Users are defined in `instalacion.ini` [USUARIOS].
+- **Authentication**: Custom session-based auth (`express-session` + `session-file-store`). **Not** Basic Auth (though a middleware exists, it's unused). Users are defined in `instalacion.json` [USUARIOS].
 - **Scheduling**: The `Horas` parameter in device sections acts as a "valid window" for both tariff-based charging and humidity-based control. If outside `Horas`, the device is forced OFF if it was ON.
 
 ## Important runtime/config patterns
-- **`instalacion.ini` Sections**:
+- **`instalacion.json` Sections**:
   - `[GENERAL]`: Global settings (`ConsumoMaximo`, `Titulo`, `Coordenadas`, `AEMETApiKey`, `AEMETEstacion`, `OpenWeatherApiKey`, `PrioridadTiempo`, `CarpetaJson`).
   - `[SERVER]`: Network config (`Port`, `Host`, `SessionSecret`).
   - `[TUYA]`: Credentials (`baseUrl`, `imagesUrl`, `accessKey`, `secretKey`).
@@ -69,6 +69,7 @@ Short, actionable guidance for an AI coding agent to be productive in this codeb
 
 ## Development & Debugging
 - **Run**: `node server.mjs`.
+- **Sync to production**: `npm run sync` (copies only required files using `sync.config.json`).
 - **Logs**: Standard stdout. The web UI log viewer pipes `journalctl`.
 - **Diagnostics**: `consumptionManager` logs IDs returned by the cloud when a device status is missing.
 - **Tuya UID**: Explicitly detected at startup via `detectUid` (probing first few device IDs).
@@ -76,5 +77,5 @@ Short, actionable guidance for an AI coding agent to be productive in this codeb
 ---
 **When editing**:
 - Prefer `checkConsumption` logic updates to be batched.
-- Keep `instalacion.ini` as the master config.
+- Keep `instalacion.json` as the master config.
 - Ensure new endpoints are protected with `requireAuth`.

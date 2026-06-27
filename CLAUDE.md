@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run the test suite**: `npm test` (executes `node test/test_horas.mjs`)
 - **Run a single test file**: `node test/<test_file>.mjs`
 - **Lint (if ESLint config exists)**: `npx eslint .` *(add a script in `package.json` if you want a shortcut)*
+- **Sync to production**: `npm run sync` (copies only required files to the destination configured in `sync.config.json`)
 - **Check repository status**: `git status`
 - **View recent commits**: `git log -5 --oneline`
 
