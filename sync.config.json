@@ -1,5 +1,5 @@
 {
-  "destination": "N:\\home\\philippe\\node.js\\tuya.1.1.0",
+  "destination": "N:\\home\\philippe\\node.js\\tuya",
   "excludes": [
     "node_modules",
     "public/json",

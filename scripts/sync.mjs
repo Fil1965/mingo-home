@@ -69,20 +69,38 @@ export function sync(config) {
     function filter(sourcePath, destinationPath) {
         const relPath = path.relative(projectRoot, sourcePath).split(path.sep).join('/');
         const baseName = path.basename(relPath);
-        const isFile = fs.statSync(sourcePath).isFile();
 
+        // Exclusiones (chequeo barato, antes de stat)
         if (isExcluded(relPath, excludes)) {
-            if (isFile) skipped++;
             return false;
         }
 
-        if (!isFile) {
-            return true;
+        let stat;
+        try {
+            stat = fs.statSync(sourcePath);
+        } catch {
+            return false;
         }
 
+        if (!stat.isFile()) {
+            return true; // siempre recorrer directorios
+        }
+
+        // Preservar ficheros especificados que ya existen en el destino
         if (preserveInDestination.includes(baseName) && fs.existsSync(destinationPath)) {
             skipped++;
             return false;
+        }
+
+        // Saltar ficheros sin cambios: mismo tamaño y destino mtime >= fuente mtime
+        try {
+            const destStat = fs.statSync(destinationPath);
+            if (destStat.size === stat.size && destStat.mtimeMs >= stat.mtimeMs) {
+                skipped++;
+                return false;
+            }
+        } catch {
+            // El destino no existe -> hay que copiarlo
         }
 
         copied++;
