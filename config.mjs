@@ -13,14 +13,14 @@ const instalacion_ini = 'instalacion.ini';
  * @returns {Promise<Object>} Configuration object
  */
 export async function loadConfig() {
+    const configPath = path.join(__dirname, 'instalacion.json');
     try {
-        const configPath = path.join(__dirname, 'instalacion.json');
         const data = await readFileAsync(configPath, 'utf-8');
         const config = JSON.parse(data);
         const medidorId = config.GENERAL.MedidorGeneral;
         const usuarios = config.USUARIOS || {};
 
-        logger.info('Leyendo configuración (JSON) ...');
+        logger.info(`Leyendo configuración desde ${configPath} ...`);
 
         return {
             instalacion: config,
@@ -38,7 +38,7 @@ export async function loadConfig() {
             __dirname
         };
     } catch (error) {
-        logger.error('Error cargando la configuración:', error);
+        logger.error(`Error cargando la configuración desde ${configPath}:`, error.message);
         throw error;
     }
 }

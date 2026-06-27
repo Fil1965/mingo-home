@@ -1616,7 +1616,7 @@ async function startServer() {
         }
 
     } catch (error) {
-        logger.error('Initialization failed:', error);
+        logger.error('Initialization failed:', error.message || error);
         process.exit(1);
     }
 }
