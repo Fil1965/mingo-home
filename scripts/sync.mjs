@@ -29,6 +29,11 @@ export function isExcluded(relPath, excludes) {
     return list.some(pattern => {
         if (pattern === relPath) return true;
         if (pattern === baseName) return true;
+        if (pattern.startsWith('*')) {
+            const suffix = pattern.slice(1);
+            if (relPath.endsWith(suffix)) return true;
+            if (baseName.endsWith(suffix)) return true;
+        }
         if (pattern.endsWith('*')) {
             const prefix = pattern.slice(0, -1);
             if (relPath.startsWith(prefix)) return true;
@@ -113,7 +118,7 @@ function main() {
     }
 }
 
-const isMain = path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1]);
+const isMain = process.argv[1] && path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1]);
 if (isMain) {
     main();
 }

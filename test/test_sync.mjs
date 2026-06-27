@@ -17,6 +17,18 @@ assert.equal(isExcluded('npm-debug.log'), true);
 assert.equal(isExcluded('session.cookie'), true);
 assert.equal(isExcluded('Thumbs.db'), true);
 
+// Wildcard matching
+const wildcardExcludes = ['*.log', '*.cookie'];
+assert.equal(isExcluded('npm-debug.log', wildcardExcludes), true, 'npm-debug.log matches *.log');
+assert.equal(isExcluded('server.log', wildcardExcludes), true, 'server.log matches *.log');
+assert.equal(isExcluded('foo.log', wildcardExcludes), true, 'foo.log matches *.log');
+assert.equal(isExcluded('session.cookie', wildcardExcludes), true, 'session.cookie matches *.cookie');
+assert.equal(isExcluded('server.mjs', wildcardExcludes), false, 'server.mjs does not match any wildcard');
+
+const trailingWildcardExcludes = ['npm-debug.log*'];
+assert.equal(isExcluded('npm-debug.log', trailingWildcardExcludes), true, 'npm-debug.log matches npm-debug.log*');
+assert.equal(isExcluded('npm-debug.log.1', trailingWildcardExcludes), true, 'npm-debug.log.1 matches npm-debug.log*');
+
 const configPath = path.join(projectRoot, 'tmp-sync-config.json');
 const destDir = path.join(projectRoot, 'tmp-sync-dest');
 
