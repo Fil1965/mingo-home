@@ -38,61 +38,79 @@ export function isExcluded(relPath, excludes) {
     });
 }
 
-function sync(source, destination, config, currentRelPath = '') {
-    const { excludes = [], preserveInDestination = [] } = config;
+export function sync(config) {
+    const destination = path.resolve(config.destination);
 
     if (!fs.existsSync(destination)) {
         fs.mkdirSync(destination, { recursive: true });
     }
 
+    const excludes = [...(config.excludes || [])];
+    const preserveInDestination = config.preserveInDestination || [];
+
+    // Evitar copiar el propio directorio de destino dentro de sí mismo
+    // cuando está contenido en el árbol de origen.
+    const destRel = path.relative(projectRoot, destination).split(path.sep).join('/');
+    const destInsideSource = destRel && !destRel.startsWith('..') && !path.isAbsolute(destRel);
+    if (destInsideSource) {
+        if (!excludes.includes(destRel)) {
+            excludes.push(destRel);
+        }
+    }
+
     let copied = 0;
     let skipped = 0;
 
-    const entries = fs.readdirSync(source, { withFileTypes: true });
-    for (const entry of entries) {
-        const relPath = currentRelPath ? `${currentRelPath}/${entry.name}` : entry.name;
-        const srcPath = path.join(source, entry.name);
-        const destPath = path.join(destination, entry.name);
+    function filter(sourcePath, destinationPath) {
+        const relPath = path.relative(projectRoot, sourcePath).split(path.sep).join('/');
+        const baseName = path.basename(relPath);
+        const isFile = fs.statSync(sourcePath).isFile();
 
         if (isExcluded(relPath, excludes)) {
-            skipped++;
-            continue;
+            if (isFile) skipped++;
+            return false;
         }
 
-        if (entry.isDirectory()) {
-            const result = sync(srcPath, destPath, config, relPath);
-            copied += result.copied;
-            skipped += result.skipped;
-        } else {
-            if (preserveInDestination.includes(entry.name) && fs.existsSync(destPath)) {
-                skipped++;
-                continue;
-            }
-            fs.cpSync(srcPath, destPath, { force: true });
-            copied++;
+        if (!isFile) {
+            return true;
         }
+
+        if (preserveInDestination.includes(baseName) && fs.existsSync(destinationPath)) {
+            skipped++;
+            return false;
+        }
+
+        copied++;
+        return true;
+    }
+
+    // Cuando el destino cae dentro del árbol de origen, fs.cpSync rechaza
+    // copiar el directorio raíz sobre sí mismo. En ese caso copiamos cada
+    // entrada de primer nivel por separado, aprovechando el mismo filtro.
+    if (destInsideSource) {
+        const entries = fs.readdirSync(projectRoot, { withFileTypes: true });
+        for (const entry of entries) {
+            const srcPath = path.join(projectRoot, entry.name);
+            const destPath = path.join(destination, entry.name);
+            fs.cpSync(srcPath, destPath, { recursive: true, filter });
+        }
+    } else {
+        fs.cpSync(projectRoot, destination, { recursive: true, filter });
     }
 
     return { copied, skipped };
 }
 
 function main() {
-    const config = loadConfig();
-    const destination = path.resolve(config.destination);
-
-    // Evitar copiar el propio directorio de destino dentro de sí mismo
-    // cuando está contenido en el árbol de origen.
-    const destRel = path.relative(projectRoot, destination).split(path.sep).join('/');
-    if (destRel && !destRel.startsWith('..') && !path.isAbsolute(destRel)) {
-        config.excludes = [...(config.excludes || [])];
-        if (!config.excludes.includes(destRel)) {
-            config.excludes.push(destRel);
-        }
+    try {
+        const config = loadConfig();
+        console.log(`Sincronizando desde ${projectRoot} hacia ${path.resolve(config.destination)}`);
+        const { copied, skipped } = sync(config);
+        console.log(`Copiados: ${copied}, Omitidos: ${skipped}`);
+    } catch (err) {
+        console.error(`Error de sincronización: ${err.message}`);
+        process.exit(1);
     }
-
-    console.log(`Sincronizando desde ${projectRoot} hacia ${destination}`);
-    const { copied, skipped } = sync(projectRoot, destination, config);
-    console.log(`Copiados: ${copied}, Omitidos: ${skipped}`);
 }
 
 const isMain = path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1]);
