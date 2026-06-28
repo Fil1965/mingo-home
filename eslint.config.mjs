@@ -23,7 +23,7 @@ export default [
         }
     },
     {
-        files: ['*.mjs', 'server.mjs', 'config.mjs', 'tuyaClient.mjs', 'consumptionManager.mjs', 'src/managers/tariff.mjs', 'weatherManager.mjs', 'alertManager.mjs'],
+        files: ['*.mjs', 'server.mjs', 'config.mjs', 'tuyaClient.mjs', 'consumptionManager.mjs', 'src/managers/tariff.mjs', 'src/managers/weather.mjs', 'alertManager.mjs'],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'module',

@@ -1,10 +1,63 @@
+# Weather Migration Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Move and rename `weatherManager.mjs` from the project root to `src/managers/weather.mjs`. Same public API (`fetchWeather`, `actualizarTiempo`), same behavior, same `<root>/public/json/` output paths because `state.dirname` (and the explicit `dirname` parameter on `actualizarTiempo`) point at the project root.
+
+**Architecture:** Create the new file with **imports already corrected** (lesson from the tariff plan bug — see Task 1 below). Update 6 references (4 imports + 1 lint list + 1 backup script). Verify with a broad grep (lesson from the logger spec). Delete the old file. One commit per change for clean revertability.
+
+**Tech Stack:** Node.js native `fs`/`fs/promises`/`path` (kept bare, not `node:` prefixed, per spec — same as tariff), `moment` 2.x, `axios` 1.x, `pino` 10.x (via `../logging/logger.mjs`), ES modules (`.mjs`).
+
+---
+
+## File structure
+
+| File | Responsibility |
+|------|---------------|
+| `src/managers/weather.mjs` | New location of the weather manager. Identical to `weatherManager.mjs` BUT with two internal imports adjusted for the new directory depth. |
+| `weatherManager.mjs` (root) | Deleted after all imports migrate. |
+| `server.mjs`, `test/test_weather.mjs`, `test/verify_cache.mjs`, `test/verify_ttl.mjs` | Updated imports. |
+| `eslint.config.mjs` | Updated lint files list. |
+| `scripts/backup.sh` | Updated FILES array (was stale for tariff, now stale for weather). |
+
+---
+
+## Global Constraints
+
+- **Project version**: `1.1.1` (package.json stays untouched).
+- **File rename**: `weatherManager.mjs` → `weather.mjs`. Drop the `Manager` suffix because the file already lives in `src/managers/`. Coherent with `logger.mjs` and `tariff.mjs`.
+- **Public API**: 2 named exports with unchanged names and signatures: `fetchWeather(state)`, `actualizarTiempo(tiempo, dirname)`.
+- **`public/json/` paths**: `<state.dirname>/public/json/YYYY-MM-DD_tiempo.json` and `<state.dirname>/public/json/aemet_station_cache.json`. Unchanged because consumers pass the project root as `dirname`.
+- **Internal imports** (CRITICAL — applied lesson from tariff spec):
+  - `logger` import: `'./src/logging/logger.mjs'` → `'../logging/logger.mjs'`
+  - `getTodosDispositivos` import: `'./tuyaClient.mjs'` → `'../tuyaClient.mjs'` (tuyaClient stays at root for now)
+- **`moment`, `axios`, `fs/promises`, `fs`, `path` imports**: stay as-is. Bare, not `node:` prefixed (matches tariff spec — out of scope).
+- **No new dependencies**.
+- **Verification**: `npm test` (6 suites, none exercises weather directly — coverage is syntactic + smoke), broad grep for `weatherManager`, smoke run of `node server.mjs` to confirm `fetchWeather` writes or attempts to write the JSON file.
+
+---
+
+## Task 1: Create `src/managers/weather.mjs`
+
+**Files:**
+- Create: `src/managers/weather.mjs`
+
+**CRITICAL**: The file must have the two internal imports adjusted from the start. This is the lesson from the tariff plan bug (commit `2df408d`).
+
+- [ ] **Step 1: Create the new file**
+
+Create `src/managers/weather.mjs` with this EXACT content. Note the two adjusted import lines (highlighted in the comments):
+
+```js
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import moment from 'moment';
 import axios from 'axios';
-import logger from './src/logging/logger.mjs';
-import { getTodosDispositivos } from './tuyaClient.mjs';
+// ADJUSTED: was './src/logging/logger.mjs' in the root file. From src/managers/, go up one level to src/, then into logging/.
+import logger from '../logging/logger.mjs';
+// ADJUSTED: was './tuyaClient.mjs' in the root file. From src/managers/, go up one level to root/, where tuyaClient.mjs still lives.
+import { getTodosDispositivos } from '../tuyaClient.mjs';
 
 let nearestStationId = null;
 
@@ -376,3 +429,378 @@ export async function fetchWeather(state) {
     await actualizarTiempo(finalStructure, dirname);
     return true;
 }
+```
+
+**REMOVE THE `// ADJUSTED:` COMMENTS BEFORE COMMITTING.** They are scaffolding for the implementer; the actual file should not have them.
+
+After removing the comments, the relevant lines are:
+```js
+import logger from '../logging/logger.mjs';
+import { getTodosDispositivos } from '../tuyaClient.mjs';
+```
+
+- [ ] **Step 2: Verify the file parses**
+
+Run:
+```bash
+node --check /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/src/managers/weather.mjs
+```
+
+Expected: no output (success).
+
+- [ ] **Step 3: Confirm imports resolve correctly (load-time test)**
+
+This is the critical check that the tariff plan missed. Run:
+```bash
+cd /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home
+node --input-type=module -e "import('./src/managers/weather.mjs').then(m => console.log('exports:', Object.keys(m))).catch(e => { console.error('FAIL:', e.code, e.message); process.exit(1); })" 2>&1 | tail -3
+```
+
+Expected: `exports: [ 'fetchWeather', 'actualizarTiempo' ]`.
+
+If `ERR_MODULE_NOT_FOUND` for `'../logging/logger.mjs'` or `'../tuyaClient.mjs'` appears, STOP and report BLOCKED — the imports were not adjusted correctly.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/managers/weather.mjs
+git commit -m "feat: add src/managers/weather.mjs (moved from weatherManager.mjs)"
+```
+
+---
+
+## Task 2: Update `server.mjs` import
+
+**Files:**
+- Modify: `server.mjs:18`
+
+- [ ] **Step 1: Change the import**
+
+In `server.mjs`, line 18, replace:
+```js
+import { fetchWeather } from './weatherManager.mjs';
+```
+with:
+```js
+import { fetchWeather } from './src/managers/weather.mjs';
+```
+
+- [ ] **Step 2: Verify**
+
+Run:
+```bash
+node --check /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/server.mjs
+```
+
+Expected: no output (success).
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add server.mjs
+git commit -m "refactor: point server.mjs to src/managers/weather.mjs"
+```
+
+---
+
+## Task 3: Update `test/test_weather.mjs` import
+
+**Files:**
+- Modify: `test/test_weather.mjs:1`
+
+- [ ] **Step 1: Change the import**
+
+In `test/test_weather.mjs`, line 1, replace:
+```js
+import { fetchWeather } from '../weatherManager.mjs';
+```
+with:
+```js
+import { fetchWeather } from '../src/managers/weather.mjs';
+```
+
+- [ ] **Step 2: Verify**
+
+Run:
+```bash
+node --check /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/test/test_weather.mjs
+```
+
+Expected: no output (success).
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add test/test_weather.mjs
+git commit -m "refactor: point test_weather.mjs to src/managers/weather.mjs"
+```
+
+---
+
+## Task 4: Update `test/verify_cache.mjs` import
+
+**Files:**
+- Modify: `test/verify_cache.mjs:1`
+
+- [ ] **Step 1: Change the import**
+
+In `test/verify_cache.mjs`, line 1, replace:
+```js
+import { fetchWeather } from '../weatherManager.mjs';
+```
+with:
+```js
+import { fetchWeather } from '../src/managers/weather.mjs';
+```
+
+- [ ] **Step 2: Verify**
+
+Run:
+```bash
+node --check /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/test/verify_cache.mjs
+```
+
+Expected: no output (success).
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add test/verify_cache.mjs
+git commit -m "refactor: point verify_cache.mjs to src/managers/weather.mjs"
+```
+
+---
+
+## Task 5: Update `test/verify_ttl.mjs` import
+
+**Files:**
+- Modify: `test/verify_ttl.mjs:1`
+
+- [ ] **Step 1: Change the import**
+
+In `test/verify_ttl.mjs`, line 1, replace:
+```js
+import { fetchWeather } from '../weatherManager.mjs';
+```
+with:
+```js
+import { fetchWeather } from '../src/managers/weather.mjs';
+```
+
+- [ ] **Step 2: Verify**
+
+Run:
+```bash
+node --check /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/test/verify_ttl.mjs
+```
+
+Expected: no output (success).
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add test/verify_ttl.mjs
+git commit -m "refactor: point verify_ttl.mjs to src/managers/weather.mjs"
+```
+
+---
+
+## Task 6: Update `eslint.config.mjs` lint files list
+
+**Files:**
+- Modify: `eslint.config.mjs:26`
+
+- [ ] **Step 1: Change the entry**
+
+In `eslint.config.mjs`, line 26, replace the part:
+```js
+'weatherManager.mjs'
+```
+with:
+```js
+'src/managers/weather.mjs'
+```
+
+The full line 26 should now be:
+```js
+        files: ['*.mjs', 'server.mjs', 'config.mjs', 'tuyaClient.mjs', 'consumptionManager.mjs', 'src/managers/tariff.mjs', 'src/managers/weather.mjs', 'alertManager.mjs'],
+```
+
+- [ ] **Step 2: Verify the lint config parses**
+
+Run:
+```bash
+node --check /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/eslint.config.mjs
+```
+
+Expected: no output (success).
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add eslint.config.mjs
+git commit -m "chore: update eslint config to lint src/managers/weather.mjs"
+```
+
+---
+
+## Task 7: Update `scripts/backup.sh` FILES array
+
+**Files:**
+- Modify: `scripts/backup.sh:18`
+
+Note: The tariff migration updated this script in commit `7e9271f` to fix `tariffManager.mjs` → `src/managers/tariff.mjs`. Now we need the same for `weatherManager.mjs`.
+
+- [ ] **Step 1: Change the entry**
+
+In `scripts/backup.sh`, find the line:
+```bash
+    "weatherManager.mjs"
+```
+Replace it with:
+```bash
+    "src/managers/weather.mjs"
+```
+
+- [ ] **Step 2: Verify the shell script syntax**
+
+Run:
+```bash
+bash -n /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/scripts/backup.sh
+```
+
+Expected: no output (success). `bash -n` parses without executing.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add scripts/backup.sh
+git commit -m "chore: update scripts/backup.sh to reference src/managers/weather.mjs"
+```
+
+---
+
+## Task 8: Verify no module still references `weatherManager`
+
+**Files:**
+- (read-only grep + tests + smoke)
+
+- [ ] **Step 1: Broad grep — lesson from logger spec**
+
+Run:
+```bash
+grep -rn "weatherManager" --include="*.mjs" --include="*.js" --include="*.sh" /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/
+```
+
+Expected: no output. Every consumer now points to `./src/managers/weather.mjs` or `../src/managers/weather.mjs`.
+
+If any match appears, STOP and report BLOCKED with the match.
+
+- [ ] **Step 2: Verify the old file still parses**
+
+Run:
+```bash
+node --check /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/weatherManager.mjs
+```
+
+Expected: no output. The old file is still valid (it imports the same modules with the old paths, which still resolve from the root). It just has no consumers anymore.
+
+- [ ] **Step 3: Run the full test suite**
+
+Run:
+```bash
+cd /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home && npm test
+```
+
+Expected: 6 suites pass. **None of them exercises weather directly** — this is syntactic coverage plus a check that no consumer broke.
+
+- [ ] **Step 4: Smoke-run the server to confirm `fetchWeather` is reachable**
+
+Run:
+```bash
+cd /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home
+node server.mjs > /tmp/servidor-weather.log 2>&1 &
+SERVER_PID=$!
+sleep 3
+ls -la public/json/*_tiempo.json 2>&1 | head -3
+kill $SERVER_PID
+wait $SERVER_PID 2>/dev/null
+echo "--- server log: weather lines ---"
+grep -i "weather\|aemet\|openweather" /tmp/servidor-weather.log | head -10
+```
+
+Expected: Either a fresh `public/json/YYYY-MM-DD_tiempo.json` OR a logged error like `[Weather] No se obtuvo clima externo ni datos de sensores locales.` OR an AEMET/OpenWeather API error (401, 429, network failure). Any of these outcomes proves the import path resolves and `fetchWeather` is being called. A `MODULE_NOT_FOUND` error means a consumer was missed — STOP and report BLOCKED.
+
+---
+
+## Task 9: Delete the old `weatherManager.mjs`
+
+**Files:**
+- Delete: `weatherManager.mjs` (root)
+
+- [ ] **Step 1: Remove the file**
+
+Run:
+```bash
+rm /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/weatherManager.mjs
+```
+
+- [ ] **Step 2: Verify the project still runs**
+
+Run:
+```bash
+cd /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home
+timeout 4 node server.mjs 2>&1 | tail -10
+```
+
+Expected: listening message, no `MODULE_NOT_FOUND` for `./weatherManager.mjs` or `../weatherManager.mjs`.
+
+- [ ] **Step 3: Run the full test suite one more time**
+
+Run:
+```bash
+cd /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home && npm test
+```
+
+Expected: 6 suites pass.
+
+- [ ] **Step 4: Confirm the old file is gone**
+
+Run:
+```bash
+ls /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/weatherManager.mjs 2>&1
+```
+
+Expected: `No such file or directory`.
+
+- [ ] **Step 5: Final broad grep**
+
+Run:
+```bash
+grep -rn "weatherManager" --include="*.mjs" --include="*.js" --include="*.sh" /home/erfilis/Mis\ Fuentes/node.js/tuya.1.1.0/mingo-home/
+```
+
+Expected: no output. Old filename fully eradicated from code.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add -u weatherManager.mjs
+git commit -m "chore: remove legacy root weatherManager.mjs after migration to src/managers/"
+```
+
+---
+
+## Self-Review Checklist
+
+- [x] Spec coverage: every requirement in `docs/superpowers/specs/2026-06-28-weather-migration-design.md` maps to a task (Task 1 = new file with corrected imports, Tasks 2-7 = imports/lint/backup, Task 8 = verification, Task 9 = deletion).
+- [x] Placeholder scan: no "TBD", "TODO", or vague instructions. Every code step shows the exact replacement.
+- [x] Type/signature consistency: same 2 named exports with same signatures. `dirname` parameter preserved.
+- [x] Order: new file exists before any consumer switches to it (Task 1 → Tasks 2-7), so the project never has a broken state in git history.
+- [x] Final state: only `src/managers/weather.mjs` exists; no consumer references the old path; `npm test` green.
+- [x] Tariff lesson applied:
+  - Task 1's brief shows imports **already adjusted** (with `// ADJUSTED:` scaffolding comments for the implementer to verify).
+  - Task 1 Step 3 is a load-time test that catches any remaining `ERR_MODULE_NOT_FOUND` before committing.
+  - Task 8 grep is broad (`*.mjs`, `*.js`, `*.sh`, whole tree), not narrow like the logger spec's grep.
+  - Tasks 3, 4, 5 explicitly handle `test/`'s `../` prefix.
+  - Task 7 explicitly updates `scripts/backup.sh` (which the tariff phase initially missed and the final review caught).
