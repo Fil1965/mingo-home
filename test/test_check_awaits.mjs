@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Silenciar logger real
-import loggerReal from '../logger.mjs';
+import loggerReal from '../src/logging/logger.mjs';
 const origInfo = loggerReal.info.bind(loggerReal);
 const origWarn = loggerReal.warn.bind(loggerReal);
 const origError = loggerReal.error.bind(loggerReal);
