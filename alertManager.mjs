@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import logger from './logger.mjs';
+import logger from './src/logging/logger.mjs';
 
 class AlertManager {
     constructor(dirname) {
