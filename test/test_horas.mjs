@@ -1,6 +1,6 @@
 import assert from 'assert';
 import { horaIncluida } from '../consumptionManager.mjs';
-import { horaIncluidaHoras, isCurrentHourAmongCheapest } from '../tariffManager.mjs';
+import { horaIncluidaHoras, isCurrentHourAmongCheapest } from '../src/managers/tariff.mjs';
 
 const today = new Date();
 const date = today.toISOString().slice(0,10);
