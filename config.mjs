@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { promisify } from 'util';
-import logger from './logger.mjs';
+import logger from './src/logging/logger.mjs';
 import { saveAtomic } from './src/config/persistence.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
