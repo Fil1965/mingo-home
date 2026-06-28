@@ -26,7 +26,7 @@ export async function refrescarTarifa(dirname) {
 
         return hourlyValues;
     } catch (ex) {
-        logger.error('Error al refrescar tarifa:', ex);
+        logger.error({ err: ex }, 'Error al refrescar tarifa:');
         return null;
     }
 }
@@ -54,7 +54,7 @@ export function horaIncluidaHoras(horasStr, horaActualNum) {
     }
     return false;
   } catch (e) {
-    logger.error('Error parseando Horas:', e);
+    logger.error({ err: e }, 'Error parseando Horas:');
     return false;
   }
 }

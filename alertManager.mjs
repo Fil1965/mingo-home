@@ -34,7 +34,7 @@ class AlertManager {
         try {
             await fs.writeFile(this.fic, JSON.stringify(this.alerts, null, 2), 'utf8');
         } catch (e) {
-            logger.error('Error saving alerts:', e.message);
+            logger.error({ err: e }, 'Error saving alerts:');
         }
     }
 

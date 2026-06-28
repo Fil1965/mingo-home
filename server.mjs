@@ -103,7 +103,7 @@ async function startServer() {
                     const success = await fetchWeather(state);
                     scheduleNextWeather(!success);
                 } catch (e) {
-                    logger.error('[Weather] Error during scheduled fetch:', e);
+                    logger.error({ err: e }, '[Weather] Error during scheduled fetch:');
                     scheduleNextWeather(true);
                 }
             }, delay);
@@ -127,7 +127,7 @@ async function startServer() {
                 try {
                     await checkConsumption(state);
                 } catch (e) {
-                    logger.error('[Startup] Error en primer checkConsumption:', e);
+                    logger.error({ err: e }, '[Startup] Error en primer checkConsumption:');
                 }
             }, 0);
 
@@ -137,7 +137,7 @@ async function startServer() {
                     const success = await fetchWeather(state);
                     scheduleNextWeather(!success);
                 } catch (e) {
-                    logger.error('[Startup] Error en primer fetchWeather:', e);
+                    logger.error({ err: e }, '[Startup] Error en primer fetchWeather:');
                     scheduleNextWeather(true);
                 }
             }, 0);
@@ -257,7 +257,7 @@ async function startServer() {
                     author: packageJson.author
                 });
             } catch (error) {
-                logger.error('Error reading package.json:', error);
+                logger.error({ err: error }, 'Error reading package.json:');
                 res.status(500).json({ error: 'Error retrieving application info' });
             }
         });
@@ -454,7 +454,7 @@ async function startServer() {
                 const info = await getInfo(deviceId);
                 res.json(info);
             } catch (e) {
-                logger.error('Error al obtener info de Tuya:', e);
+                logger.error({ err: e }, 'Error al obtener info de Tuya:');
                 res.status(500).json({ error: 'Error al consultar la nube de Tuya' });
             }
         });
@@ -489,7 +489,7 @@ async function startServer() {
 
                 res.json(info);
             } catch (e) {
-                logger.error('Error al obtener todos los dispositivos de Tuya:', e);
+                logger.error({ err: e }, 'Error al obtener todos los dispositivos de Tuya:');
                 res.status(500).json({ error: 'Error al consultar la nube de Tuya' });
             }
         });
@@ -587,7 +587,7 @@ async function startServer() {
                     }
                 }
             } catch (err) {
-                logger.error('Error auto-detecting device capabilities:', err);
+                logger.error({ err: err }, 'Error auto-detecting device capabilities:');
                 // Continue adding the device even if auto-detection fails
             }
 
@@ -615,7 +615,7 @@ async function startServer() {
             try {
                 await saveConfig(state.instalacion);
             } catch (e) {
-                logger.error(`Error saving timestamp for DSP ${dsp}:`, e);
+                logger.error({ err: e }, `Error saving timestamp for DSP ${dsp}:`);
             }
         };
 
@@ -751,13 +751,20 @@ async function startServer() {
                         const parsed = JSON.parse(line);
                         const time = new Date(parsed.time).toISOString().replace('T', ' ').slice(0, 19);
                         const level = ({ 10: 'TRACE', 20: 'DEBUG', 30: 'INFO', 40: 'WARN', 50: 'ERROR', 60: 'FATAL' })[parsed.level] || 'LOG';
-                        return `[${time}] ${level}: ${parsed.msg}`;
+                        let msg = parsed.msg || '';
+                        if (parsed.err) {
+                            const errMsg = parsed.err.message || '';
+                            const errStack = parsed.err.stack || '';
+                            if (errMsg) msg += ` ${errMsg}`;
+                            if (errStack) msg += `\n${errStack}`;
+                        }
+                        return `[${time}] ${level}: ${msg}`;
                     } catch {
                         return line;
                     }
                 }));
             } catch (err) {
-                logger.error('Error leyendo log:', err);
+                logger.error({ err: err }, 'Error leyendo log:');
                 return res.status(500).json({ error: 'Error leyendo log del servidor' });
             }
         });
@@ -879,7 +886,7 @@ async function startServer() {
                 }
 
             } catch (e) {
-                logger.error('Error al obtener estados:', e);
+                logger.error({ err: e }, 'Error al obtener estados:');
                 res.status(500).json({ error: 'Error interno' });
             }
         });
@@ -927,7 +934,7 @@ async function startServer() {
                         return res.json({ success: false, message: 'No hay datos para esta hora' });
                     }
                 } catch (e) {
-                    logger.error('Error leyendo fichero de tiempo:', e);
+                    logger.error({ err: e }, 'Error leyendo fichero de tiempo:');
                     return res.status(500).json({ success: false, error: 'Error interno' });
                 }
             } else {
@@ -991,7 +998,7 @@ async function startServer() {
                     const prefs = JSON.parse(fs.readFileSync(prefsPath, 'utf8'));
                     res.json(prefs);
                 } catch (e) {
-                    logger.error(`Error reading prefs for user ${user}:`, e);
+                    logger.error({ err: e }, `Error reading prefs for user ${user}:`);
                     res.json({}); // Default empty prefs on error
                 }
             } else {
@@ -1008,7 +1015,7 @@ async function startServer() {
                 fs.writeFileSync(prefsPath, JSON.stringify(newPrefs, null, 2), 'utf8');
                 res.json({ success: true });
             } catch (e) {
-                logger.error(`Error saving prefs for user ${user}:`, e);
+                logger.error({ err: e }, `Error saving prefs for user ${user}:`);
                 res.status(500).json({ error: 'Error al guardar las preferencias' });
             }
         });
@@ -1197,7 +1204,7 @@ async function startServer() {
                                 weatherData = { ubi: w.ubi, ta: w.ta, hr: w.hr, icon: w.icon };
                             }
                         }
-                    } catch (e) { logger.error('Error weather update:', e); }
+                    } catch (e) { logger.error({ err: e }, 'Error weather update:'); }
                 }
 
                 // 4. Energy (logic from /energy/status)
@@ -1253,7 +1260,7 @@ async function startServer() {
                             }
                         }
                     }
-                } catch (e) { logger.error('Error energy update:', e); }
+                } catch (e) { logger.error({ err: e }, 'Error energy update:'); }
 
                 // Final response
                 res.json({
@@ -1273,7 +1280,7 @@ async function startServer() {
                 });
 
             } catch (e) {
-                logger.error('Unified Update Error:', e);
+                logger.error({ err: e }, 'Unified Update Error:');
                 res.status(500).json({ success: false, error: 'Internal Server Error' });
             }
         });
@@ -1539,7 +1546,7 @@ async function startServer() {
                 res.json({ success: true, result: resultados });
 
             } catch (error) {
-                logger.error(error);
+                logger.error({ err: error });
                 res.status(500).json({ success: false, error: error.message });
             }
         });
@@ -1568,12 +1575,12 @@ async function startServer() {
                     state.ngrokUrl = url;
                 })
                 .catch(err => {
-                    logger.error('Could not start ngrok listener:', err.message);
+                    logger.error({ err: err }, 'Could not start ngrok listener:');
                 });
         }
 
     } catch (error) {
-        logger.error('Initialization failed:', error.message || error);
+        logger.error({ err: error }, 'Initialization failed:');
         process.exit(1);
     }
 }

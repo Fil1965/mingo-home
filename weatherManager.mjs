@@ -31,7 +31,7 @@ async function fetchOpenWeather(lat, lon, apiKey) {
             };
         }
     } catch (error) {
-        logger.error('[OpenWeather] Error fetching data:', error.message);
+        logger.error({ err: error }, '[OpenWeather] Error fetching data:');
     }
     return null;
 }
@@ -146,7 +146,7 @@ async function findNearestStation(lat, lon, apiKey, dirname) {
                     await fs.mkdir(cacheDir, { recursive: true });
                     await fs.writeFile(cacheFile, JSON.stringify(closest, null, 2), 'utf8');
                 } catch (err) {
-                    logger.error('[AEMET] Error al guardar cache de estación:', err.message);
+                    logger.error({ err: err }, '[AEMET] Error al guardar cache de estación:');
                 }
 
                 return { id: closest.idema, fallback: false };
@@ -156,7 +156,7 @@ async function findNearestStation(lat, lon, apiKey, dirname) {
         if (error.response && error.response.status === 429) {
             logger.error('[AEMET] Error buscando estaciones: Request failed with status code 429');
         } else {
-            logger.error('[AEMET] Error buscando estaciones:', error.message);
+            logger.error({ err: error }, '[AEMET] Error buscando estaciones:');
         }
 
         // Fallback a cache expirada si existe
@@ -198,7 +198,7 @@ export async function actualizarTiempo(tiempo, dirname) {
         await fs.writeFile(fic, JSON.stringify(json, null, 2), 'utf8');
         logger.info(`[Weather] Tiempo actualizado (AEMET) para la hora ${hor}`);
     } catch (error) {
-        logger.error(`Error actualizando tiempo en JSON:`, error);
+        logger.error({ err: error }, 'Error actualizando tiempo en JSON:');
     }
 }
 
@@ -260,7 +260,7 @@ async function getLocalSensorsData(state) {
         }
 
     } catch (err) {
-        logger.error('[Weather] Error obteniendo sensores locales:', err);
+        logger.error({ err: err }, '[Weather] Error obteniendo sensores locales:');
     }
 
     return sensorsMap;
@@ -331,7 +331,7 @@ export async function fetchWeather(state) {
                         logger.error('[AEMET] La API no devolvió URL de datos');
                     }
                 } catch (error) {
-                    logger.error('[AEMET] Error al consultar datos:', error.message);
+                    logger.error({ err: error }, '[AEMET] Error al consultar datos:');
                 }
             }
         }

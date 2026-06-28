@@ -69,7 +69,7 @@ export async function actualizarConsumo(consumo, dirname) {
         json[hor][min] = consumo;
         await fs.writeFile(fic, JSON.stringify(json, null, 2), 'utf8');
     } catch (error) {
-        logger.error(`Error actualizando consumo:`, error);
+        logger.error({ err: error }, 'Error actualizando consumo:');
     }
 }
 
@@ -88,7 +88,7 @@ export async function checkConsumption(state) {
             });
         }
     } catch (e) {
-        logger.error("Error obteniendo estados masivos en checkConsumption:", e);
+        logger.error({ err: e }, 'Error obteniendo estados masivos en checkConsumption:');
         return;
     }
 
@@ -244,7 +244,7 @@ export async function checkConsumption(state) {
         // Al cambiar de hora, aplicamos salvaguarda a la hora que acaba de terminar
         if (lastHora !== null) {
             applyHourlySafeguard(lastHora, dirname, instalacion, medidor).catch(e => {
-                logger.error(`[Safeguard] Error en salvaguarda horaria para ${lastHora}:`, e);
+                logger.error({ err: e }, `[Safeguard] Error en salvaguarda horaria para ${lastHora}:`);
             });
         }
 
@@ -329,7 +329,7 @@ export async function checkConsumption(state) {
                         await _alternar(dispositivo.Id, 0, instalacion, identificadores);
                     }
                 } catch (err) {
-                    logger.error(`Error controlando humedad para ${key}:`, err);
+                    logger.error({ err: err }, `Error controlando humedad para ${key}:`);
                 }
             }
         }
@@ -405,6 +405,6 @@ export async function applyHourlySafeguard(horaStr, dirname, instalacion, medido
         }
 
     } catch (err) {
-        logger.error(`[Safeguard] Error procesando salvaguarda horaria:`, err);
+        logger.error({ err: err }, '[Safeguard] Error procesando salvaguarda horaria:');
     }
 }

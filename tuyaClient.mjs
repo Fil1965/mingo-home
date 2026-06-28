@@ -67,7 +67,7 @@ async function getAccessToken() {
                 throw new Error(`Tuya Auth Error: ${response.data.msg}`);
             }
         } catch (error) {
-            logger.error('Error fetching access token:', error.message);
+            logger.error({ err: error }, 'Error fetching access token:');
             throw error;
         } finally {
             tokenPromise = null;
@@ -99,7 +99,7 @@ export async function makeRequest(path, method, body = null) {
         const response = await axios(options);
         return response.data;
     } catch (error) {
-        logger.error(`Tuya API Error (${path}):`, error.message);
+        logger.error({ err: error }, `Tuya API Error (${path}):`);
         throw error;
     }
 }

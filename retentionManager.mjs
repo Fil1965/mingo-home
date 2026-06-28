@@ -91,7 +91,7 @@ export async function manageRetention(instalacion, baseDir) {
                         logger.info(`[Retention] Archivo eliminado: ${file}`);
                         deletedCount++;
                     } catch (err) {
-                        logger.error(`[Retention] Error eliminando ${file}:`, err);
+                        logger.error({ err: err }, `[Retention] Error eliminando ${file}:`);
                     }
                 }
             }
@@ -100,6 +100,6 @@ export async function manageRetention(instalacion, baseDir) {
         logger.info(`[Retention] Limpieza completada. ${deletedCount} archivos eliminados.`);
 
     } catch (error) {
-        logger.error('[Retention] Error crítico durante la ejecución:', error);
+        logger.error({ err: error }, '[Retention] Error crítico durante la ejecución:');
     }
 }

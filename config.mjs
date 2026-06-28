@@ -40,7 +40,7 @@ export async function loadConfig() {
             __dirname
         };
     } catch (error) {
-        logger.error(`Error cargando la configuración desde ${configPath}:`, error.message);
+        logger.error({ err: error }, `Error cargando la configuración desde ${configPath}:`);
         throw error;
     }
 }
@@ -75,7 +75,7 @@ export async function saveConfig(configObject) {
         await saveAtomic(configPath, configObject, { backupDir, maxBackups: 10 });
         logger.info('Configuración guardada (atomic) en instalacion.json');
     } catch (error) {
-        logger.error('Error guardando la configuración:', error);
+        logger.error({ err: error }, 'Error guardando la configuración:');
         throw error;
     }
 }
