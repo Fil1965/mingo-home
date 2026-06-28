@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import moment from 'moment';
-import logger from './logger.mjs';
+import logger from './src/logging/logger.mjs';
 import { getEstado, alternar, getSwitchValue, getTodosDispositivos } from './tuyaClient.mjs';
 import { isCurrentHourAmongCheapest, refrescarTarifa, horaIncluidaHoras } from './tariffManager.mjs';
 
