@@ -35,3 +35,4 @@ Desktop.ini
 
 # Configuraciones locales (no subir credenciales al repo)
 instalacion.json
+instalacion.backups/

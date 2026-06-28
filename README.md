@@ -21,9 +21,11 @@ El servidor escucha por defecto en `http://0.0.0.0:3000`.
 La configuración se almacena en `instalacion.json`. Antes de arrancar por primera vez, copia la plantilla y edita los valores:
 
 ```bash
-cp instalacion.example.json instalacion.json
+cp instalacion.json.sample instalacion.json
 # edita instalacion.json con tus credenciales de Tuya, usuarios, etc.
 ```
+
+La plantilla `instalacion.json.sample` incluye un dispositivo de cada tipo (medidor, sensor de temperatura/humedad, enchufe, deshumidificador con regla de humedad, calentador con tarifa y lámpara) para que sirva de referencia. Todos los datos sensibles (API keys, IDs de dispositivos, contraseñas) están anonimizados con placeholders como `TU_ACCESS_KEY` o `DEVICE_ID_ENCHUFE`.
 
 > ⚠️ `instalacion.json` está excluido del repositorio (`.gitignore`) porque contiene credenciales y contraseñas.
 
@@ -32,26 +34,61 @@ cp instalacion.example.json instalacion.json
 | Comando | Descripción |
 |---------|-------------|
 | `npm start` | Arranca el servidor (`node server.mjs`) |
-| `npm test` | Ejecuta la suite de tests (`test/test_horas.mjs`) |
+| `npm test` | Ejecuta la suite de tests (`test/test_horas.mjs`, `test_check_awaits.mjs`, `test_require_admin.mjs`, `test_session.mjs`, `test_cors.mjs`, `test_save_atomic.mjs`) |
 | `npm run lint` | Linting de archivos `.mjs` del frontend con ESLint |
-| `npm run sync` | Copia los archivos necesarios al destino configurado en `sync.config.json` |
+| `npm run sync` | Copia los archivos necesarios al destino configurado en `sync.config.json` (excluye `instalacion.backups/`) |
 
 ## 🏗️ Arquitectura
 
 ```
-server.mjs              → Entry point (Express)
-config.mjs              → Carga/guarda configuración (instalacion.json)
-tuyaClient.mjs          → API Tuya cloud (firmas V2, batch requests)
-tariffManager.mjs       → Descarga precios PVPC por hora
-weatherManager.mjs      → Datos meteorológicos AEMET/OpenWeather
-consumptionManager.mjs  → Lógica de consumo y scheduling de dispositivos
-alertManager.mjs        → Alertas de la interfaz
-retentionManager.mjs    → Limpieza de datos históricos
-logger.mjs              → Logging estructurado (pino)
-public/                 → Frontend estático (HTML/JS, jQuery, Bootstrap, Chart.js)
-scripts/                → Scripts de utilidad (sync, backup, iconos)
-test/                   → Tests
+server.mjs                → Entry point (Express)
+config.mjs                → Carga/guarda configuración (instalacion.json, escritura atómica)
+tuyaClient.mjs            → API Tuya cloud (firmas V2, batch requests)
+tariffManager.mjs         → Descarga precios PVPC por hora
+weatherManager.mjs        → Datos meteorológicos AEMET/OpenWeather
+consumptionManager.mjs    → Lógica de consumo y scheduling de dispositivos
+alertManager.mjs          → Alertas de la interfaz
+retentionManager.mjs      → Limpieza de datos históricos
+logger.mjs                → Logging estructurado (pino)
+src/api/middleware/       → Middlewares (auth, session hardened, CORS restrictivo)
+src/config/persistence.mjs→ Escritura atómica con backups rotatorios
+public/                   → Frontend estático (HTML/JS, jQuery, Bootstrap, Chart.js)
+scripts/                  → Scripts de utilidad (sync, backup, iconos)
+test/                     → Tests
+instalacion.backups/      → Backups automáticos de instalacion.json (max 10, excluido de sync)
 ```
+
+### Middlewares (`src/api/middleware/`)
+
+| Módulo | Exporta | Función |
+|--------|---------|---------|
+| `auth.mjs` | `createRequireAdmin(getInstalacion)` | Gate estricto 401/403 para endpoints sensibles (9 rutas) |
+| `auth.mjs` | `getAdminList(instalacion)` | Parsea `GENERAL.administradores` (string CSV → array) |
+| `session.mjs` | `buildSessionOptions({ secret, isProduction, ... })` | Cookies endurecidas (httpOnly + sameSite=lax + secure en prod + maxAge 24 h); rechaza secretos inseguros en producción |
+| `cors.mjs` | `createCorsMiddleware(allowed)` | CORS restrictivo; por defecto NO emite `Access-Control-Allow-Origin` (el navegador bloquea cross-origin) |
+
+### Configuración CORS
+
+Añade `SERVER.CorsOrigins` en `instalacion.json` para permitir orígenes concretos (array JSON o string CSV). Ejemplos:
+
+```json
+"SERVER": {
+  "Port": 3000,
+  "Host": "0.0.0.0",
+  "SessionSecret": "una-clave-aleatoria-de-al-menos-32-chars",
+  "CorsOrigins": ["https://panel.example.com", "https://admin.example.com"]
+}
+```
+
+```json
+"CorsOrigins": "*"
+```
+
+Si la clave está ausente o vacía, NO se emite `Access-Control-Allow-Origin` (política más segura: same-origin y nada más). Si vale `["*"]`, se emite el `Origin` concreto de cada petición (la app usa cookies, así que no se admite `Access-Control-Allow-Origin: *` literal).
+
+### Backups automáticos
+
+Cada guardado de `instalacion.json` (vía `saveAtomic`) deja una copia en `instalacion.backups/instalacion.json.backup-<timestamp>-<seq>-<rand>`. Se conservan como máximo 10 (los más antiguos se eliminan automáticamente). Esta carpeta está excluida de `npm run sync`, así que solo se queda en local.
 
 ## ⚙️ Parámetros de dispositivos
 

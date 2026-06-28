@@ -19,6 +19,9 @@ import { fetchWeather } from './weatherManager.mjs';
 import { manageRetention } from './retentionManager.mjs';
 import AlertManager from './alertManager.mjs';
 import { setAlertManager, checkConsumption, getLastPowerReading } from './consumptionManager.mjs';
+import { createRequireAdmin, getAdminList } from './src/api/middleware/auth.mjs';
+import { buildSessionOptions } from './src/api/middleware/session.mjs';
+import { createCorsMiddleware } from './src/api/middleware/cors.mjs';
 
 /**
  * Basic authentication middleware
@@ -50,7 +53,7 @@ async function startServer() {
         initTuya(instalacion.TUYA);
 
         const alertManager = new AlertManager(__dirname);
-        const adminList = (instalacion.GENERAL.administradores || '').split(',').map(u => u.trim()).filter(u => u !== '');
+        const adminList = getAdminList(instalacion);
         await alertManager.load(adminList);
         setAlertManager(alertManager);
 
@@ -72,6 +75,10 @@ async function startServer() {
                 if (dev.Id) state.identificadores[dev.Id] = key;
             });
         }
+
+        // Middleware: requiere rol de administrador
+        // (evalúa la lista de admins en cada request leyendo desde state.instalacion)
+        const requireAdmin = createRequireAdmin(() => state.instalacion);
 
         // Fetch weather immediately and then schedule for every hour on the hour
         const scheduleNextWeather = (isRetry = false) => {
@@ -150,16 +157,10 @@ async function startServer() {
         app.use(express.urlencoded({ extended: true }));
         app.use(express.json());
 
-        // Custom CORS Middleware
-        app.use((req, res, next) => {
-            res.header('Access-Control-Allow-Origin', '*');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-api-key, Authorization');
-            res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-            if (req.method === 'OPTIONS') {
-                return res.sendStatus(200);
-            }
-            next();
-        });
+        // CORS restrictivo: allowlist opcional via SERVER.CorsOrigins
+        // Por defecto (sin configurar) NO se emite Access-Control-Allow-Origin,
+        // lo que bloquea cualquier petición cross-origin en el navegador.
+        app.use(createCorsMiddleware(config.corsOrigins));
 
         // Static files (served without auth)
         app.use(express.static(path.join(__dirname, 'public')));
@@ -195,12 +196,12 @@ async function startServer() {
             logger.warn('  sudo mkdir -p ' + sessionsDir + ' && sudo chown $(whoami) ' + sessionsDir);
         }
 
-        const sessionOptions = {
+        const isProduction = process.env.NODE_ENV === 'production';
+        const sessionOptions = buildSessionOptions({
             secret: sessionSecret,
-            resave: false,
-            saveUninitialized: false,
-            cookie: { maxAge: 24 * 60 * 60 * 1000 }
-        };
+            isProduction,
+            onWarn: (msg) => logger.warn(msg)
+        });
 
         if (useFileStore) {
             sessionOptions.store = new FileStore({
@@ -263,7 +264,7 @@ async function startServer() {
 
         // API Routes
         app.get('/instalacion.json', requireAuth, (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
+            const adminList = getAdminList(state.instalacion);
             const isAdmin = adminList.includes(req.session.user);
             if (isAdmin) {
                 res.json(state.instalacion);
@@ -273,11 +274,7 @@ async function startServer() {
             }
         });
 
-        app.post('/server/restart', requireAuth, (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            const isAdmin = adminList.includes(req.session.user);
-            if (!isAdmin) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.post('/server/restart', requireAuth, requireAdmin, (req, res) => {
             logger.info(`[Server] Restart requested by ${req.session.user}`);
             res.json({ success: true, message: 'Reiniciando servidor...' });
 
@@ -286,11 +283,7 @@ async function startServer() {
             }, 500);
         });
 
-        app.post('/config/valor', requireAuth, async (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            const isAdmin = adminList.includes(req.session.user);
-            if (!isAdmin) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.post('/config/valor', requireAuth, requireAdmin, async (req, res) => {
             const { section, key, value } = req.body;
             if (!section || !key || value === undefined) return res.status(400).json({ error: 'Parámetros insuficientes' });
 
@@ -416,11 +409,7 @@ async function startServer() {
             }
         });
 
-        app.post('/config/usuario/añadir', requireAuth, async (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            const isAdmin = adminList.includes(req.session.user);
-            if (!isAdmin) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.post('/config/usuario/añadir', requireAuth, requireAdmin, async (req, res) => {
             const { usuario, password } = req.body;
             if (!usuario || !password) return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
 
@@ -438,11 +427,7 @@ async function startServer() {
             }
         });
 
-        app.post('/config/usuario/eliminar', requireAuth, async (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            const isAdmin = adminList.includes(req.session.user);
-            if (!isAdmin) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.post('/config/usuario/eliminar', requireAuth, requireAdmin, async (req, res) => {
             const { usuario } = req.body;
             if (!usuario) return res.status(400).json({ error: 'Usuario requerido' });
 
@@ -463,11 +448,7 @@ async function startServer() {
             }
         });
 
-        app.get('/tuya/info/:deviceId', requireAuth, async (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            const isAdmin = adminList.includes(req.session.user);
-            if (!isAdmin) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.get('/tuya/info/:deviceId', requireAuth, requireAdmin, async (req, res) => {
             const deviceId = req.params.deviceId;
             try {
                 const info = await getInfo(deviceId);
@@ -478,11 +459,7 @@ async function startServer() {
             }
         });
 
-        app.get('/tuya/todos', requireAuth, async (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            const isAdmin = adminList.includes(req.session.user);
-            if (!isAdmin) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.get('/tuya/todos', requireAuth, requireAdmin, async (req, res) => {
             try {
                 // Optimización: Usamos el UID cacheado si existe
                 let uid = state.uid;
@@ -536,11 +513,8 @@ async function startServer() {
             }
         });
 
-        app.post('/config/dispositivo/add', requireAuth, async (req, res) => {
+        app.post('/config/dispositivo/add', requireAuth, requireAdmin, async (req, res) => {
             logger.info('Solicitud recibida para añadir dispositivo:', req.body);
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            const isAdmin = adminList.includes(req.session.user);
-            if (!isAdmin) return res.status(403).json({ error: 'Acceso denegado' });
 
             const { id, descripcion, protocolo } = req.body;
             if (!id || !descripcion || !protocolo) return res.status(400).json({ error: 'Parámetros insuficientes' });
@@ -648,7 +622,7 @@ async function startServer() {
         // endpoint para comprobar sesión sin redirección (útil para AJAX)
         app.get('/session', (req, res) => {
             if (req.session && req.session.authenticated) {
-                const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
+                const adminList = getAdminList(state.instalacion);
                 const isAdmin = adminList.includes(req.session.user);
                 return res.json({ authenticated: true, user: req.session.user, isAdmin: isAdmin });
             }
@@ -677,11 +651,7 @@ async function startServer() {
             return res.status(401).send('Credenciales incorrectas');
         });
 
-        app.post('/config/dispositivo/eliminar', requireAuth, async (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            const isAdmin = adminList.includes(req.session.user);
-            if (!isAdmin) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.post('/config/dispositivo/eliminar', requireAuth, requireAdmin, async (req, res) => {
             const { section } = req.body;
             if (section === undefined || section === null) return res.status(400).json({ error: 'Sección requerida' });
 
@@ -1308,10 +1278,7 @@ async function startServer() {
             }
         });
 
-        app.post('/mingotouchs/theme', requireAuth, async (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            if (!adminList.includes(req.session.user)) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.post('/mingotouchs/theme', requireAuth, requireAdmin, async (req, res) => {
             const { dsp, theme } = req.body;
             if (!dsp || !theme) return res.status(400).json({ error: 'Parámetros insuficientes' });
 
@@ -1326,10 +1293,7 @@ async function startServer() {
             }
         });
 
-        app.post('/mingotouchs/add', requireAuth, async (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            if (!adminList.includes(req.session.user)) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.post('/mingotouchs/add', requireAuth, requireAdmin, async (req, res) => {
             const { dsp, section } = req.body;
             if (!dsp || section === undefined) return res.status(400).json({ error: 'Parámetros insuficientes' });
 
@@ -1386,10 +1350,7 @@ async function startServer() {
             }
         });
 
-        app.post('/mingotouchs/remove', requireAuth, async (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            if (!adminList.includes(req.session.user)) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.post('/mingotouchs/remove', requireAuth, requireAdmin, async (req, res) => {
             const { dsp, section } = req.body;
             if (section === undefined) return res.status(400).json({ error: 'Parámetros insuficientes' });
 
@@ -1431,11 +1392,7 @@ async function startServer() {
             }
         });
 
-        app.post('/mingotouchs/reorder', requireAuth, async (req, res) => {
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
-            const isAdmin = adminList.includes(req.session.user);
-            if (!isAdmin) return res.status(403).json({ error: 'Acceso denegado' });
-
+        app.post('/mingotouchs/reorder', requireAuth, requireAdmin, async (req, res) => {
             const { dsp, order } = req.body; // order: array de { section, page, type }
             if (!dsp || !Array.isArray(order)) return res.status(400).json({ error: 'Parámetros insuficientes' });
 
@@ -1469,7 +1426,7 @@ async function startServer() {
         // Alert Endpoints
         app.get('/alerts', requireAuth, (req, res) => {
             const user = req.session.user;
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
+            const adminList = getAdminList(state.instalacion);
 
             if (!adminList.includes(user)) {
                 return res.json([]); // Regular users don't see alerts
@@ -1484,7 +1441,7 @@ async function startServer() {
             const user = req.session.user;
             if (!id) return res.status(400).json({ error: 'Falta ID de alerta' });
 
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
+            const adminList = getAdminList(state.instalacion);
             const success = await state.alertManager.acknowledge(id, user, adminList);
             res.json({ success });
         });
@@ -1494,7 +1451,7 @@ async function startServer() {
             const user = req.session.user;
             if (!ids || !Array.isArray(ids)) return res.status(400).json({ error: 'Faltan IDs de alertas' });
 
-            const adminList = (state.instalacion.GENERAL.administradores || '').split(',').map(u => u.trim());
+            const adminList = getAdminList(state.instalacion);
             let successCount = 0;
             for (const id of ids) {
                 const success = await state.alertManager.acknowledge(id, user, adminList);

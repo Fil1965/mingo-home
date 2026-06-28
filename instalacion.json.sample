@@ -1,0 +1,175 @@
+{
+  "_comentario": "Archivo de ejemplo. Copia este fichero como 'instalacion.json' y sustituye los valores por los tuyos. Los campos marcados como 'XXX' son obligatorios.",
+  "GENERAL": {
+    "ConsumoMaximo": 3500,
+    "PrecioMinimo": 50,
+    "MedidorGeneral": 0,
+    "CarpetaJson": "json/",
+    "Titulo": "Mingo-Home",
+    "administradores": "admin",
+    "Coordenadas": "40.4168, -3.7038",
+    "PrioridadTiempo": "AEMET, OpenWeather",
+    "OpenWeatherApiKey": "TU_OPENWEATHER_API_KEY_AQUI",
+    "AEMETApiKey": "TU_AEMET_API_KEY_AQUI",
+    "AEMETEstacion": "3129A",
+    "WeatherPage_1": "3",
+    "Theme_1": "noche",
+    "WeatherEnabled_1": true,
+    "Timestamp_1": "",
+    "EnergyPage_1": "1",
+    "Retencion": "6M"
+  },
+  "USUARIOS": {
+    "admin": "cambia_esta_clave",
+    "usuario2": "clave_de_ejemplo"
+  },
+  "SERVER": {
+    "Host": "0.0.0.0",
+    "Port": 3000,
+    "SessionSecret": "genera_un_secreto_aleatorio_largo_y_unico",
+    "ApiKey": "tu_api_key_interna",
+    "WebHook": "Ninguno",
+    "ngrokToken": "",
+    "ngrokDomain": ""
+  },
+  "TUYA": {
+    "baseUrl": "https://openapi.tuyaeu.com",
+    "imagesUrl": "https://images.tuyaeu.com/",
+    "accessKey": "TU_ACCESS_KEY",
+    "secretKey": "TU_SECRET_KEY"
+  },
+  "MingoTouchs": {
+    "1": {
+      "Nombre": "ESP32 Salón",
+      "Tipo": "ESP32-2432S024R"
+    },
+    "2": {
+      "Nombre": "Teléfono Android",
+      "Tipo": "ANDROID"
+    }
+  },
+  "Dispositivos": {
+    "0": {
+      "Descripcion": "Medidor Consumo General",
+      "Protocolo": "TuyaCloud",
+      "Id": "DEVICE_ID_DEL_MEDIDOR",
+      "Apagable": "No",
+      "Corriente": "cur_current",
+      "Potencia": "cur_power",
+      "Voltaje": "cur_voltage",
+      "Reactiva": "power_reactive",
+      "Icon": "rulers",
+      "MostrarGrafico": "No",
+      "RegistroConsumo": "Si",
+      "MingoTouchs": [
+        {
+          "MTDsp": 1,
+          "MTPag": "2",
+          "MTTip": "Consumo"
+        }
+      ]
+    },
+    "1": {
+      "Descripcion": "Sensor Interior (Temp/Humedad)",
+      "Protocolo": "TuyaCloud",
+      "Id": "DEVICE_ID_SENSOR_INTERIOR",
+      "Apagable": "No",
+      "Temperatura": "va_temperature",
+      "TemperaturaDiv": 10,
+      "Humedad": "va_humidity",
+      "Icon": "columns",
+      "MostrarGrafico": "Si",
+      "MingoTouchs": [
+        {
+          "MTDsp": 1,
+          "MTPag": "4",
+          "MTTip": "Clima"
+        }
+      ]
+    },
+    "2": {
+      "Descripcion": "Enchufe Inteligente",
+      "Protocolo": "TuyaCloud",
+      "Id": "DEVICE_ID_ENCHUFE",
+      "Apagable": "Si",
+      "Interruptor": "switch_1",
+      "Corriente": "cur_current",
+      "Potencia": "cur_power",
+      "Voltaje": "cur_voltage",
+      "IconOn": "plug-fill",
+      "IconOff": "plug",
+      "RegistroConsumo": "Si",
+      "MingoTouchs": [
+        {
+          "MTDsp": 1,
+          "MTPag": "10",
+          "MTTip": "Enchufe"
+        }
+      ]
+    },
+    "20": {
+      "Descripcion": "Deshumidificador",
+      "Protocolo": "TuyaCloud",
+      "Id": "DEVICE_ID_DESHUMIDIFICADOR",
+      "Interruptor": "switch_1",
+      "Apagable": "No",
+      "Voltaje": "cur_voltage",
+      "Corriente": "cur_current",
+      "Potencia": "cur_power",
+      "Humedad_Maxima": 65,
+      "Higrometro": 1,
+      "Horas": "10-20",
+      "IconOn": "plug-fill",
+      "IconOff": "plug",
+      "MostrarGrafico": "No",
+      "RegistroConsumo": "Si",
+      "MingoTouchs": [
+        {
+          "MTDsp": 1,
+          "MTPag": "12",
+          "MTTip": "Enchufe"
+        }
+      ]
+    },
+    "30": {
+      "Descripcion": "Calentador (tarifa)",
+      "Protocolo": "TuyaCloud",
+      "Id": "DEVICE_ID_CALENTADOR",
+      "Carga": 6,
+      "Consumo": 1500,
+      "Interruptor": "switch",
+      "Fase_A": "phase_a",
+      "Temperatura": "temp_current",
+      "IconOn": "beaker-fill",
+      "IconOff": "beaker",
+      "MostrarGrafico": "No",
+      "RegistroConsumo": "Si",
+      "MingoTouchs": [
+        {
+          "MTDsp": 1,
+          "MTPag": "14",
+          "MTTip": "Enchufe"
+        }
+      ]
+    },
+    "40": {
+      "Descripcion": "Lámpara Salón",
+      "Protocolo": "TuyaCloud",
+      "Id": "DEVICE_ID_LAMPARA",
+      "Interruptor": "switch_1",
+      "Voltaje": "cur_voltage",
+      "Corriente": "cur_current",
+      "Potencia": "cur_power",
+      "IconOn": "lamp-fill",
+      "IconOff": "lamp",
+      "RegistroConsumo": "Si",
+      "MingoTouchs": [
+        {
+          "MTDsp": 1,
+          "MTPag": "5",
+          "MTTip": "Luz"
+        }
+      ]
+    }
+  }
+}

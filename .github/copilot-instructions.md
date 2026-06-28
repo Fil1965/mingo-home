@@ -24,13 +24,14 @@ Short, actionable guidance for an AI coding agent to be productive in this codeb
   - **Weather Failure**: If AEMET fails, it retries for 5 minutes. If it still fails, it checks for `OpenWeatherApiKey` as a fallback.
   - **Weather Priority**: Configurable via `PrioridadTiempo` (e.g., `OpenWeather, AEMET`). Default is `AEMET, OpenWeather`.
   - `consumptionManager.checkConsumption`: Runs every minute. **MUST USE BATCH FETCHING**.
-- **Authentication**: Custom session-based auth (`express-session` + `session-file-store`). **Not** Basic Auth (though a middleware exists, it's unused). Users are defined in `instalacion.json` [USUARIOS].
+- **Authentication**: Custom session-based auth (`express-session` + `session-file-store`), configured through `buildSessionOptions` in `src/api/middleware/session.mjs` for hardened cookies (httpOnly, sameSite=lax, secure in production, mandatory non-default `SessionSecret` in production). **Not** Basic Auth (though a middleware exists, it's unused). Users are defined in `instalacion.json` [USUARIOS]; admin users come from `GENERAL.administradores` (CSV) and are evaluated per request via `createRequireAdmin` in `src/api/middleware/auth.mjs`.
+- **CORS**: Restrictive middleware from `src/api/middleware/cors.mjs`. By default NO `Access-Control-Allow-Origin` is emitted (browser blocks cross-origin). Add `SERVER.CorsOrigins` to `instalacion.json` to allow specific origins or `["*"]` for a wildcard (resolved to concrete origin per request, since the app uses cookies).
 - **Scheduling**: The `Horas` parameter in device sections acts as a "valid window" for both tariff-based charging and humidity-based control. If outside `Horas`, the device is forced OFF if it was ON.
 
 ## Important runtime/config patterns
 - **`instalacion.json` Sections**:
-  - `[GENERAL]`: Global settings (`ConsumoMaximo`, `Titulo`, `Coordenadas`, `AEMETApiKey`, `AEMETEstacion`, `OpenWeatherApiKey`, `PrioridadTiempo`, `CarpetaJson`).
-  - `[SERVER]`: Network config (`Port`, `Host`, `SessionSecret`).
+  - `[GENERAL]`: Global settings (`ConsumoMaximo`, `Titulo`, `Coordenadas`, `AEMETApiKey`, `AEMETEstacion`, `OpenWeatherApiKey`, `PrioridadTiempo`, `CarpetaJson`, `administradores` (CSV)).
+  - `[SERVER]`: Network config (`Port`, `Host`, `SessionSecret`, `CorsOrigins` (array of allowed origins; `["*"]` for wildcard)).
   - `[TUYA]`: Credentials (`baseUrl`, `imagesUrl`, `accessKey`, `secretKey`).
   - `[USUARIOS]`: `username=password` pairs.
   - `[N]`: Device sections (numeric ID).
@@ -45,6 +46,7 @@ Short, actionable guidance for an AI coding agent to be productive in this codeb
   - JSON files in `public/json/` are the historical record (prices, weather).
   - `public/json/aemet_station_cache.json` stores the nearest weather station ID with a 24h TTL.
   - `user_prefs/` stores UI preferences.
+  - `instalacion.json` is persisted atomically via `saveAtomic()` from `src/config/persistence.mjs`; every save leaves a rolling backup in `instalacion.backups/` (max 10, excluded from `npm run sync`).
 
 ## API & Performance Best Practices
 1.  **Batching is Mandatory**:
@@ -78,4 +80,5 @@ Short, actionable guidance for an AI coding agent to be productive in this codeb
 **When editing**:
 - Prefer `checkConsumption` logic updates to be batched.
 - Keep `instalacion.json` as the master config.
-- Ensure new endpoints are protected with `requireAuth`.
+- Ensure new endpoints are protected with `requireAuth`; admin-only routes add `requireAdmin` from `src/api/middleware/auth.mjs` next in the chain.
+- For `instalacion.json` persistence use `saveAtomic()` from `src/config/persistence.mjs`; don't write JSON directly.

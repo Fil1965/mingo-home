@@ -16,14 +16,14 @@
     "session-file-store": "^1.5.0"
   },
   "name": "mingo-home",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "server.mjs",
   "devDependencies": {
     "eslint": "^10.6.0",
     "globals": "^17.7.0"
   },
   "scripts": {
-    "test": "node test/test_horas.mjs",
+    "test": "node test/test_horas.mjs && node test/test_check_awaits.mjs && node test/test_require_admin.mjs && node test/test_save_atomic.mjs && node test/test_session.mjs && node test/test_cors.mjs",
     "start": "node server.mjs",
     "lint": "eslint public/js/**/*.mjs",
     "sync": "node scripts/sync.mjs"

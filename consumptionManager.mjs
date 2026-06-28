@@ -13,6 +13,27 @@ let currentHora = null;
 let lastPower = 0;
 let alertManager = null; // Will be set by server.mjs
 
+// Inyección de dependencias opcional (para tests).
+// En producción, se usan los imports originales.
+let _deps = null;
+
+export function setDependencies(deps) {
+    _deps = deps;
+}
+
+function _alternar(...args) {
+    return (_deps && _deps.alternar) ? _deps.alternar(...args) : alternar(...args);
+}
+function _actualizarConsumo(...args) {
+    return (_deps && _deps.actualizarConsumo) ? _deps.actualizarConsumo(...args) : actualizarConsumo(...args);
+}
+function _getTodosDispositivos(...args) {
+    return (_deps && _deps.getTodosDispositivos) ? _deps.getTodosDispositivos(...args) : getTodosDispositivos(...args);
+}
+function _refrescarTarifa(...args) {
+    return (_deps && _deps.refrescarTarifa) ? _deps.refrescarTarifa(...args) : refrescarTarifa(...args);
+}
+
 export function setAlertManager(manager) {
     alertManager = manager;
 }
@@ -58,7 +79,7 @@ export async function checkConsumption(state) {
     // Optimización: Recopilar estados de todos los dispositivos en una sola llamada
     let deviceStates = {};
     try {
-        const allStats = await getTodosDispositivos(state.uid);
+        const allStats = await _getTodosDispositivos(state.uid);
 
         if (allStats.success && (allStats.result.list || Array.isArray(allStats.result))) {
             const list = allStats.result.list || allStats.result;
@@ -164,7 +185,7 @@ export async function checkConsumption(state) {
     }
 
     // Guardar JSON actualizado
-    await actualizarConsumo(consumptionData, dirname);
+    await _actualizarConsumo(consumptionData, dirname);
 
     // Actualizar variable global (en W)
     lastPower = Math.round(mainMeterPower / 10);
@@ -180,7 +201,7 @@ export async function checkConsumption(state) {
             logger.info(`${Math.round(powerInWatts)} W supera el máximo (${instalacion.GENERAL.ConsumoMaximo} W)`);
 
             if (instalacion.Dispositivos) {
-                Object.keys(instalacion.Dispositivos).forEach(async key => {
+                for (const key of Object.keys(instalacion.Dispositivos)) {
                     const dispositivo = instalacion.Dispositivos[key];
                     if (dispositivo.Apagable && dispositivo.Apagable.toLowerCase() === 'si') {
                         const status = getEstadoLocal(dispositivo.Id);
@@ -188,12 +209,12 @@ export async function checkConsumption(state) {
                             const isOn = getSwitchValue(status, dispositivo.Interruptor || 'switch_1');
                             if (isOn === true) {
                                 logger.info(`Apagando ${key} (${dispositivo.Descripcion}) por consumo`);
-                                const res = await alternar(dispositivo.Id, 0, instalacion, identificadores);
+                                const res = await _alternar(dispositivo.Id, 0, instalacion, identificadores);
                                 if (res && res.success) apagados[key] = true;
                             }
                         }
                     }
-                });
+                }
             }
         }
     } else {
@@ -218,7 +239,7 @@ export async function checkConsumption(state) {
     if (currentHora !== nowHora) {
         const lastHora = currentHora;
         currentHora = nowHora;
-        state.tarifa = await refrescarTarifa(dirname);
+        state.tarifa = await _refrescarTarifa(dirname);
 
         // Al cambiar de hora, aplicamos salvaguarda a la hora que acaba de terminar
         if (lastHora !== null) {
@@ -228,7 +249,7 @@ export async function checkConsumption(state) {
         }
 
         if (instalacion.Dispositivos) {
-            Object.keys(instalacion.Dispositivos).forEach(async key => {
+            for (const key of Object.keys(instalacion.Dispositivos)) {
                 const dispositivo = instalacion.Dispositivos[key];
                 if (dispositivo.Carga) {
                     const status = getEstadoLocal(dispositivo.Id);
@@ -238,20 +259,20 @@ export async function checkConsumption(state) {
 
                         if (isCheapest && isOn === false) {
                             logger.info(`(${currentHora}) horas baratas para ${key} -- ENCENDEMOS`);
-                            await alternar(dispositivo.Id, 1, instalacion, identificadores);
+                            await _alternar(dispositivo.Id, 1, instalacion, identificadores);
                         } else if (!isCheapest && isOn === true) {
                             logger.info(`(${currentHora}) NO es barata para ${key} --- APAGAMOS`);
-                            await alternar(dispositivo.Id, 0, instalacion, identificadores);
+                            await _alternar(dispositivo.Id, 0, instalacion, identificadores);
                         }
                     }
                 }
-            });
+            }
         }
     }
 
     // Humidity control: devices with Humedad_Maxima and Higrometro
     if (instalacion.Dispositivos) {
-        Object.keys(instalacion.Dispositivos).forEach(async key => {
+        for (const key of Object.keys(instalacion.Dispositivos)) {
             const dispositivo = instalacion.Dispositivos[key];
             if (dispositivo.Humedad_Maxima && dispositivo.Higrometro) {
                 try {
@@ -264,10 +285,10 @@ export async function checkConsumption(state) {
                             const isOn = getSwitchValue(statusDevice, dispositivo.Interruptor || 'switch_1');
                             if (isOn === true) {
                                 logger.info(`Fuera de Horas (${horasCfg}) para ${key} (${dispositivo.Descripcion}) — APAGANDO`);
-                                await alternar(dispositivo.Id, 0, instalacion, identificadores);
+                                await _alternar(dispositivo.Id, 0, instalacion, identificadores);
                             }
                         }
-                        return; // continue equivalent in forEach
+                        continue;
                     }
 
                     const higroKey = dispositivo.Higrometro; // higroKey is index string "1" or number
@@ -276,42 +297,42 @@ export async function checkConsumption(state) {
 
                     if (!higroConfig) {
                         logger.info(`Higrometro ${higroKey} not found for ${key}`);
-                        return;
+                        continue;
                     }
 
                     const statusH = getEstadoLocal(higroConfig.Id);
                     if (!statusH || !statusH.success) {
                         // Silent fail or log sparingly
-                        return;
+                        continue;
                     }
 
                     const humCode = higroConfig.Humedad || 'va_humidity';
                     const humItem = statusH.result.find(r => r.code === humCode);
-                    if (!humItem) return;
+                    if (!humItem) continue;
 
                     let humValue = Number(humItem.value);
                     if (higroConfig.HumedadDiv) humValue = humValue / Number(higroConfig.HumedadDiv);
 
                     const maxHum = Number(dispositivo.Humedad_Maxima);
-                    if (isNaN(humValue) || isNaN(maxHum)) return;
+                    if (isNaN(humValue) || isNaN(maxHum)) continue;
 
                     const statusDevice = getEstadoLocal(dispositivo.Id);
-                    if (!statusDevice || !statusDevice.success) return;
+                    if (!statusDevice || !statusDevice.success) continue;
 
                     const isOn = getSwitchValue(statusDevice, dispositivo.Interruptor || 'switch_1');
 
                     if (humValue >= maxHum && isOn !== true) {
                         logger.info(`Humedad ${humValue}% >= ${maxHum}%: encendiendo ${key} (${dispositivo.Descripcion})`);
-                        await alternar(dispositivo.Id, 1, instalacion, identificadores);
+                        await _alternar(dispositivo.Id, 1, instalacion, identificadores);
                     } else if (humValue < maxHum && isOn === true) {
                         logger.info(`Humedad ${humValue}% < ${maxHum}%: apagando ${key} (${dispositivo.Descripcion})`);
-                        await alternar(dispositivo.Id, 0, instalacion, identificadores);
+                        await _alternar(dispositivo.Id, 0, instalacion, identificadores);
                     }
                 } catch (err) {
                     logger.error(`Error controlando humedad para ${key}:`, err);
                 }
             }
-        });
+        }
     }
 }
 
