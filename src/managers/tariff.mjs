@@ -1,7 +1,7 @@
 import moment from 'moment';
 import fs from 'fs/promises';
 import path from 'path';
-import logger from './src/logging/logger.mjs';
+import logger from '../logging/logger.mjs';
 
 const redel = 'https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real';
 
