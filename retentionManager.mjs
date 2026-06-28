@@ -5,7 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import logger from './logger.mjs';
+import logger from './src/logging/logger.mjs';
 
 /**
  * Calculates the cutoff date based on the retention string.
