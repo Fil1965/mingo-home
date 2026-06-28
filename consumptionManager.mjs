@@ -6,7 +6,7 @@ import { getEstado, alternar, getSwitchValue, getTodosDispositivos } from './tuy
 import { isCurrentHourAmongCheapest, refrescarTarifa, horaIncluidaHoras } from './src/managers/tariff.mjs';
 
 // Re-exportado para compatibilidad con tests existentes
-export { horaIncluidaHoras as horaIncluida } from './tariffManager.mjs';
+export { horaIncluidaHoras as horaIncluida } from './src/managers/tariff.mjs';
 
 let apagados = {};
 let currentHora = null;
