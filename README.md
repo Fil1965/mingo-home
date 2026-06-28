@@ -49,7 +49,7 @@ weatherManager.mjs        → Datos meteorológicos AEMET/OpenWeather
 consumptionManager.mjs    → Lógica de consumo y scheduling de dispositivos
 alertManager.mjs          → Alertas de la interfaz
 retentionManager.mjs      → Limpieza de datos históricos
-logger.mjs                → Logging estructurado (pino)
+src/logging/logger.mjs    → Logging estructurado (pino)
 src/api/middleware/       → Middlewares (auth, session hardened, CORS restrictivo)
 src/config/persistence.mjs→ Escritura atómica con backups rotatorios
 public/                   → Frontend estático (HTML/JS, jQuery, Bootstrap, Chart.js)
