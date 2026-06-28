@@ -14,7 +14,7 @@ import sessionFileStore from 'session-file-store';
 import logger from './src/logging/logger.mjs';
 import { loadConfig, saveConfig } from './config.mjs';
 import { initTuya, getEstado, getInfo, getTodosDispositivos, alternar, API_PATHS, makeRequest, detectUid } from './tuyaClient.mjs';
-import { refrescarTarifa, getCurrentTarifaValue, isCurrentHourAmongCheapest } from './tariffManager.mjs';
+import { refrescarTarifa, getCurrentTarifaValue, isCurrentHourAmongCheapest } from './src/managers/tariff.mjs';
 import { fetchWeather } from './weatherManager.mjs';
 import { manageRetention } from './retentionManager.mjs';
 import AlertManager from './alertManager.mjs';
