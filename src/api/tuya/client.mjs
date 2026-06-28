@@ -1,6 +1,6 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import logger from './src/logging/logger.mjs';
+import logger from '../../logging/logger.mjs';
 
 let config = null;
 let token = null;

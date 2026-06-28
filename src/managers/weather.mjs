@@ -4,7 +4,7 @@ import path from 'path';
 import moment from 'moment';
 import axios from 'axios';
 import logger from '../logging/logger.mjs';
-import { getTodosDispositivos } from '../../tuyaClient.mjs';
+import { getTodosDispositivos } from '../api/tuya/client.mjs';
 
 let nearestStationId = null;
 
