@@ -15,7 +15,7 @@ FILES=(
     "config.mjs"
     "server.mjs"
     "consumptionManager.mjs"
-    "tariffManager.mjs"
+    "src/managers/tariff.mjs"
     "weatherManager.mjs"
     "tuyaClient.mjs"
     "package.json"
