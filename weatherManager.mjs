@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import moment from 'moment';
 import axios from 'axios';
-import logger from './logger.mjs';
+import logger from './src/logging/logger.mjs';
 import { getTodosDispositivos } from './tuyaClient.mjs';
 
 let nearestStationId = null;
