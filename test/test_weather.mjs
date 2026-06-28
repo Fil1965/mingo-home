@@ -1,4 +1,4 @@
-import { fetchWeather } from '../weatherManager.mjs';
+import { fetchWeather } from '../src/managers/weather.mjs';
 import { loadConfig } from '../config.mjs';
 
 async function test() {

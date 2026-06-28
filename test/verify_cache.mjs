@@ -1,4 +1,4 @@
-import { fetchWeather } from '../weatherManager.mjs';
+import { fetchWeather } from '../src/managers/weather.mjs';
 import { loadConfig } from '../config.mjs';
 import fs from 'fs/promises';
 import path from 'path';
